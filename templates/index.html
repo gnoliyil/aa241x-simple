@@ -1,0 +1,233 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>AA 241x Team Page</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+<div class="container main-container">
+    <div class="row">
+        <h1>
+            AA241x Team Page
+        </h1>
+    </div>
+
+    <div class="row">
+        <div class="col-sm">
+            <div class="card">
+                <!-- div class="card-header">
+                    Featured
+                </div -->
+                <div class="card-body">
+                    <h4 class="card-title">Next port</h4>
+                    <p class="card-text text-center"><span style="font-size: 8em" id="span-next">N/A</span></p>
+                    <!-- a href="#" class="btn btn-primary">Go somewhere</a -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="next-port">
+
+    </div>
+
+    <div class="row">
+        <div class="col-sm input-group">
+            <input type="text" class="form-control" placeholder="Team ID" aria-label="Team ID" aria-describedby="basic-addon2" id="team-id">
+            <input type="text" class="form-control" placeholder="Drone ID" aria-label="Drone ID" aria-describedby="basic-addon2" id="drone-id">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" type="button" id="button-start">Start</button>
+            </div>
+        </div>
+
+        <div class="col-sm btn-group d-flex toolbar">
+            <button type="button" class="btn btn-primary w-100" id="button-takeoff">Take off</button>
+            <button type="button" class="btn btn-primary w-100" id="button-land">Land</button>
+            <button type="button" class="btn btn-outline-secondary w-100" id="button-failure">Failure</button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="myModal" role="dialog">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-title">Results</h5>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <p>This is a small modal.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="inputModal" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-title">Reset drone state</h5>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <p>Current position (port id) of the drone: </p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" aria-label="Default" aria-describedby="inputGroup-sizing-default" id="reset-port">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" id="reset-button">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script>
+    let intervalId;
+    $('#button-start').on('click', function (event) {
+        if (!intervalId) {
+            intervalId = setInterval(function () {
+                let team_id = $('#team-id').val();
+                let drone_id = $('#drone-id').val();
+                console.log(team_id + " " + drone_id);
+                $.ajax({
+                    type: 'GET',
+                    cache: false,
+                    url: 'next',
+                    data: {
+                        team_id,
+                        drone_id
+                    },
+                    dataType: 'json',
+                    success: function (json) {
+                        if (json.status === 'ok') {
+                            let span_next = $('#span-next');
+                            let previous = span_next.html();
+                            span_next.html(json.next);
+                            let current = json.next;
+                            if (previous != next) {
+                                // add some animation effects
+                            }
+                        }
+                        else
+                            $('#span-next').html(json.msg);
+                    },
+                    error: function(xhr) {
+                        alert('error');
+                    }
+                });
+            }, 1000);
+        } else {
+            window.clearInterval(intervalId);
+            intervalId = null;
+        }
+    });
+
+    $('#button-takeoff').on('click', function(event) {
+        let team_id = $('#team-id').val();
+        let drone_id = $('#drone-id').val();
+        $.ajax({
+            type: 'GET',
+            cache: false,
+            url: 'takeoff',
+            data: {
+                team_id,
+                drone_id
+            },
+            dataType: 'json',
+            success: function (json) {
+                if (json.status === 'ok') {
+                    $("#modal-title").html('Takeoff');
+                    $("#modal-body").html('Success!');
+                    $("#myModal").modal();
+                }
+                else {
+                    $("#modal-title").html('Takeoff Error');
+                    $('#modal-body').html(json.msg);
+                    $("#myModal").modal();
+                }
+            },
+            error: function(xhr) {
+                alert('error');
+            }
+        });
+    });
+
+    $('#button-land').on('click', function(event) {
+        let team_id = $('#team-id').val();
+        let drone_id = $('#drone-id').val();
+        $.ajax({
+            type: 'GET',
+            cache: false,
+            url: 'land',
+            data: {
+                team_id,
+                drone_id
+            },
+            dataType: 'json',
+            success: function (json) {
+                if (json.status === 'ok') {
+                    $("#modal-title").html('Landing');
+                    $("#modal-body").html('Success!');
+                    $("#myModal").modal();
+                }
+                else {
+                    $("#modal-title").html('Landing Error');
+                    $('#modal-body').html(json.msg);
+                    $("#myModal").modal();
+                }
+            },
+            error: function(xhr) {
+                alert('error');
+            }
+        });
+    });
+
+    $('#button-failure').on('click', function(event) {
+        $("#reset-button").on('click', function() {
+            let team_id = $('#team-id').val();
+            let drone_id = $('#drone-id').val();
+            $.ajax({
+                type: 'GET',
+                cache: false,
+                url: 'fail',
+                data: {
+                    team_id,
+                    drone_id,
+                    curr_port
+                },
+                dataType: 'json',
+                success: function (json) {
+                    if (json.status === 'ok') {
+                        $("#modal-title").html('Reset');
+                        $("#modal-body").html('Success!');
+                        $("#myModal").modal();
+                    }
+                    else {
+                        $("#modal-title").html('Reset Error');
+                        $('#modal-body').html(json.msg);
+                        $("#myModal").modal();
+                    }
+                },
+                error: function(xhr) {
+                    alert('error');
+                }
+            });
+        });
+        $("#inputModal").modal();
+    });
+</script>
+</body>

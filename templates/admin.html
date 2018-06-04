@@ -1,0 +1,112 @@
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>AA 241x Team Page</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+</head>
+
+<body>
+<div class="container main-container">
+    <div class="row">
+        <h1>
+            AA241x Admin Page
+        </h1>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 col-md-6">
+            <div class="container">
+                <div class="row">
+                    <table id="table_id" class="display compact">
+                        <thead>
+                        <tr>
+                            <th>Team ID</th>
+                            <th>Drone ID</th>
+                            <th>Current Port</th>
+                            <th>Next Port</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <table id="table_trip" class="display compact">
+                        <thead>
+                        <tr>
+                            <th>Trip ID</th>
+                            <th>Current Port</th>
+                            <th>Next Port</th>
+                            <th>Status</th>
+                            <th>Distance</th>
+                            <th>Price</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>Team ID</td>
+                            <td>Current Port</td>
+                            <td>Next Port</td>
+                            <td>Status</td>
+                            <td>Distance</td>
+                            <td>Price</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-md-6">
+
+        </div>
+    </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js" crossorigin="anonymous"></script>
+<script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+<script>
+    $(document).ready(function() {
+        var table = $("#table_id").DataTable({
+            paging: false,
+            searching: false,
+            info: false,
+            ajax: 'teams',
+            columns: [ { "data": "team_id"}, { "data": "drone_id"}, { "data": "curr_port"},
+                { "data": "next_port"}, { "data": "state"},]
+        });
+
+        $("#table_trip").DataTable({
+            paging: false,
+            searching: false,
+            info: false,
+            ajax: {
+                url: 'trips',
+                data: {
+                    team_id: 1, drone_id: 0
+                }
+            },
+            columns: [ { "data": "trip_id"}, { "data": "from_port"},
+                { "data": "to_port"}, { "data": "state"}, { "data": "distance"}, { "data": "price"}, ]
+        });
+
+        setInterval( function () {
+            table.ajax.reload();
+        }, 2000 );
+
+
+    });
+</script>
+</body>
