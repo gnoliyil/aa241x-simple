@@ -30,6 +30,7 @@
                             <th>Current Port</th>
                             <th>Next Port</th>
                             <th>Status</th>
+                            <th>Earnings</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -137,7 +138,7 @@
             info: false,
             ajax: 'teams',
             columns: [ { "data": "team_id"}, { "data": "drone_id"}, { "data": "curr_port"},
-                { "data": "next_port"}, { "data": "state"},]
+                { "data": "next_port"}, { "data": "state"}, { "data": "profit"}]
         });
 
         $("#table_trip").DataTable({

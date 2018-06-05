@@ -7,6 +7,20 @@ app = Flask(__name__)
 DATABASE = './database.db'
 START_PORT = 1
 
+def dist_ports(a, b): # in meters
+    dist = [
+        [0, 0, 0, 0, 0, 0],
+        [0, 0,     156,   225.9,  333.2,  368.3],
+        [0, 156,   0,     147.2,  301.6,  397.1],
+        [0, 225.9, 147.2, 0,      157.8,  276.4],
+        [0, 333.2, 301.6, 157.8,  0,      150.7],
+        [0, 368.3, 397.1, 276.4,  150.7,  0],
+    ]
+    return dist[a, b]
+
+def price(a, b, time_a, time_b):
+    pass
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -44,6 +58,7 @@ def teams_info():
             'state': id['state'],
             'curr_port': id['curr_port'],
             'next_port': id['next_port'],
+            'altitude': id['altitude'],
             'profit': id['profit'],
         })
 
@@ -74,6 +89,7 @@ def trips_info():
             'to_port': id['to_port'],
             'state': id['state'],
             'distance': id['distance'],
+            'altitude': id['altitude'],
             'price': id['price'],
         })
 
@@ -107,7 +123,8 @@ def next_port():
     else:
         return jsonify({
             'status': 'ok',
-            'next': team_state['next_port']
+            'next': team_state['next_port'],
+            'altitude': team_state['altitude'],
         })
 
 @app.route('/takeoff')
@@ -199,7 +216,7 @@ def land():
         else:
             next_port, port_index, trip_id = None, None, None
 
-        c.execute('UPDATE team_state SET state = ?, port_index = ?, trip_id = ?, curr_port = ?, next_port = ? '
+        c.execute('UPDATE team_state SET state = ?, port_index = ?, trip_id = ?, curr_port = ?, next_port = ?'
                   'WHERE team_id = ? AND drone_id = ?',
                   ('land', port_index, trip_id, curr_port, next_port, team_id, drone_id))
         db.commit()
@@ -228,33 +245,28 @@ def fail():
         })
 
     team_id, drone_id = request.args.get('team_id'), int(request.args.get('drone_id'))
-    curr_port = request.args.get('port')
     c.execute('SELECT * FROM team_state WHERE team_id = ? AND drone_id = ?', (team_id, drone_id))
     team_state = c.fetchone()
 
     if team_state is not None:
-        state, port_index, trip_id = \
-            team_state['state'], team_state['port_index'], team_state['trip_id']
+        curr_port, next_port, state, port_index, trip_id = \
+            team_state['curr_port'], team_state['next_port'], team_state['state'], team_state['port_index'], team_state['trip_id']
 
-        if not curr_port:
-            curr_port = team_state['curr_port']
+        if next_port == None:
+            return jsonify({
+                'status': 'error',
+                'msg': 'You have finished all the trips.'
+            })
 
-        c.execute('UPDATE team_trips SET to_time = ?, state = ?'
+        c.execute('UPDATE team_trips SET to_time = ?, state = ?, price = 0'
                   ' WHERE team_id = ? AND drone_id = ? AND trip_id = ?',
-                  (datetime.now(), 'fail', team_id, drone_id, trip_id))
+                  (datetime.now(), 'fail', 0, team_id, drone_id, trip_id))
         # TODO: Calculate profit
 
-        c.execute('SELECT * FROM team_ports WHERE team_id = ? AND drone_id = ? AND port_index = ?',
-                  (team_id, drone_id, port_index + 1))
-        port_data = c.fetchone()
-
-        if port_data is not None:
-            next_port, port_index, trip_id = port_data['port_id'], port_index + 1, trip_id + 1
-            c.execute('INSERT INTO team_trips(team_id, drone_id, trip_id, from_port, to_port, state, distance) '
-                      'VALUES (?, ?, ?, ?, ?, ?, ?)',
-                      (team_id, drone_id, trip_id, curr_port, next_port, 'created', 1))
-        else:
-            next_port, port_index, trip_id = None, None, None
+        trip_id = trip_id + 1
+        c.execute('INSERT INTO team_trips(team_id, drone_id, trip_id, from_port, to_port, state, distance) '
+                  'VALUES (?, ?, ?, ?, ?, ?, ?)',
+                  (team_id, drone_id, trip_id, curr_port, next_port, 'created', 1))
 
         c.execute('UPDATE team_state SET state = ?, port_index = ?, trip_id = ?, curr_port = ?, next_port = ? '
                   'WHERE team_id = ? AND drone_id = ?',

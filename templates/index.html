@@ -26,6 +26,7 @@
                 <div class="card-body">
                     <h4 class="card-title">Next port</h4>
                     <p class="card-text text-center"><span style="font-size: 8em" id="span-next">N/A</span></p>
+                    <p class="card-text text-center">Altitude: <span id="span-altitude">N/A</span> m</p>
                     <!-- a href="#" class="btn btn-primary">Go somewhere</a -->
                 </div>
             </div>
@@ -44,11 +45,13 @@
                 <button class="btn btn-outline-secondary" type="button" id="button-start">Start</button>
             </div>
         </div>
+    </div>
 
+    <div class="row">
         <div class="col-sm btn-group d-flex toolbar">
-            <button type="button" class="btn btn-primary w-100" id="button-takeoff">Take off</button>
-            <button type="button" class="btn btn-primary w-100" id="button-land">Land</button>
-            <button type="button" class="btn btn-outline-secondary w-100" id="button-failure">Failure</button>
+            <button type="button" class="btn btn-primary w-100" id="button-takeoff">Confirm Takeoff</button>
+            <button type="button" class="btn btn-primary w-100" id="button-land">Confirm Landing</button>
+            <button type="button" class="btn btn-outline-secondary w-100" id="button-failure">Failure (Reset Drone)</button>
         </div>
     </div>
 
@@ -117,13 +120,15 @@
                             let span_next = $('#span-next');
                             let previous = span_next.html();
                             span_next.html(json.next);
+                            $('#span-altitude').html(json.altitude);
                             let current = json.next;
                             if (previous != next) {
                                 // add some animation effects
                             }
                         }
                         else
-                            $('#span-next').html(json.msg);
+                            $('#span-next').html("N/A");
+                        $('#span-altitude').html("N/A");
                     },
                     error: function(xhr) {
                         alert('error');
@@ -150,12 +155,12 @@
             dataType: 'json',
             success: function (json) {
                 if (json.status === 'ok') {
-                    $("#modal-title").html('Takeoff');
-                    $("#modal-body").html('Success!');
+                    $("#modal-title").html('Takeoff confirmed');
+                    $("#modal-body").html('Instructions here!');
                     $("#myModal").modal();
                 }
                 else {
-                    $("#modal-title").html('Takeoff Error');
+                    $("#modal-title").html('Takeoff confirmation error');
                     $('#modal-body').html(json.msg);
                     $("#myModal").modal();
                 }
@@ -180,12 +185,42 @@
             dataType: 'json',
             success: function (json) {
                 if (json.status === 'ok') {
-                    $("#modal-title").html('Landing');
+                    $("#modal-title").html('Landing confirmed');
+                    $("#modal-body").html('Instructions here!');
+                    $("#myModal").modal();
+                }
+                else {
+                    $("#modal-title").html('Landing confirmation error');
+                    $('#modal-body').html(json.msg);
+                    $("#myModal").modal();
+                }
+            },
+            error: function(xhr) {
+                alert('error');
+            }
+        });
+    });
+
+    $("#reset-button").on('click', function() {
+        let team_id = $('#team-id').val();
+        let drone_id = $('#drone-id').val();
+        $.ajax({
+            type: 'GET',
+            cache: false,
+            url: 'fail',
+            data: {
+                team_id,
+                drone_id
+            },
+            dataType: 'json',
+            success: function (json) {
+                if (json.status === 'ok') {
+                    $("#modal-title").html('Drone status reset confirmed');
                     $("#modal-body").html('Success!');
                     $("#myModal").modal();
                 }
                 else {
-                    $("#modal-title").html('Landing Error');
+                    $("#modal-title").html('Status reset error');
                     $('#modal-body').html(json.msg);
                     $("#myModal").modal();
                 }
@@ -197,36 +232,6 @@
     });
 
     $('#button-failure').on('click', function(event) {
-        $("#reset-button").on('click', function() {
-            let team_id = $('#team-id').val();
-            let drone_id = $('#drone-id').val();
-            $.ajax({
-                type: 'GET',
-                cache: false,
-                url: 'fail',
-                data: {
-                    team_id,
-                    drone_id,
-                    curr_port
-                },
-                dataType: 'json',
-                success: function (json) {
-                    if (json.status === 'ok') {
-                        $("#modal-title").html('Reset');
-                        $("#modal-body").html('Success!');
-                        $("#myModal").modal();
-                    }
-                    else {
-                        $("#modal-title").html('Reset Error');
-                        $('#modal-body').html(json.msg);
-                        $("#myModal").modal();
-                    }
-                },
-                error: function(xhr) {
-                    alert('error');
-                }
-            });
-        });
         $("#inputModal").modal();
     });
 </script>
