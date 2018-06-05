@@ -64,7 +64,8 @@
         </div>
 
         <div class="col-sm-12 col-md-6">
-
+            <canvas id="c" width="500" height="500">
+            </canvas>
         </div>
     </div>
 
@@ -76,10 +77,61 @@
         integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.7.22/fabric.min.js"></script>
 
 <script>
+
+    function _createArrowHead(points, color) {
+        var headLength = 15,
+
+            x1 = points[0],
+            y1 = points[1],
+            x2 = points[2],
+            y2 = points[3],
+
+            dx = x2 - x1,
+            dy = y2 - y1,
+
+            angle = Math.atan2(dy, dx);
+
+        angle *= 180 / Math.PI;
+        angle += 90;
+
+        var triangle = new fabric.Triangle({
+            angle: angle,
+            fill: color,
+            top: y2,
+            left: x2,
+            height: headLength,
+            width: headLength,
+            originX: 'center',
+            originY: 'center',
+            selectable: false
+        });
+
+        return triangle;
+    }
+
+
+    function createLineArrow(points, color) {
+        var line = new fabric.Line(points, {
+            strokeWidth: 5,
+            stroke: color,
+            originX: 'center',
+            originY: 'center',
+            hasControls: false,
+            hasBorders: false,
+            hasRotatingPoint: false,
+            hoverCursor: 'default',
+            selectable: false
+        });
+
+        return [line, _createArrowHead(points, color)];
+    }
+
+
     $(document).ready(function() {
-        var table = $("#table_id").DataTable({
+        let table = $("#table_id").DataTable({
             paging: false,
             searching: false,
             info: false,
@@ -106,7 +158,71 @@
             table.ajax.reload();
         }, 2000 );
 
+        let canvas = new fabric.StaticCanvas('c', {
+            backgroundColor : "#fff",
+        });
+        canvas.setBackgroundImage("{{ url_for('static', filename='lakelag.jpg')}}", canvas.renderAll.bind(canvas));
 
+        let points = {
+            1: {x: 50, y: 40}, // elliott
+            2: {x: 205, y: 50}, // lagunita
+            3: {x: 25, y: 190}, // golf
+            4: {x: 50, y: 340}, // serra
+            5: {x: 185, y: 415} // trail
+        };
+
+        let colors = {
+            1: 'red',
+            2: 'green',
+            3: 'blue',
+            4: 'violet',
+            5: 'orange'
+        };
+
+        let shapes = [];
+
+        setInterval( function() {
+            $.ajax({
+                type: 'GET',
+                cache: false,
+                url: 'teams',
+                dataType: 'json',
+                success: function (json) {
+                    let arr = json.data;
+                    for (let i = 0; i < shapes.length; i++) {
+                        canvas.remove(shapes[i]);
+                    }
+                    shapes = [];
+
+                    for (let i = 0; i < arr.length; i++) {
+                        if (arr[i].state === 'land') {
+                            let curr_port = points[arr[i].curr_port];
+                            let trig = new fabric.Triangle({
+                                top: curr_port.y,
+                                left: curr_port.x,
+                                fill: colors[arr[i].team_id],
+                                height: 15,
+                                width: 15
+                            });
+                            shapes.push(trig);
+                            canvas.add(trig);
+                        } else {
+                            let curr_port = points[arr[i].curr_port],
+                                next_port = points[arr[i].next_port];
+                            let arrow = createLineArrow(
+                                [curr_port.x, curr_port.y, next_port.x, next_port.y],
+                                colors[arr[i].team_id]
+                            );
+                            shapes = shapes.concat(arrow);
+                            canvas.add(arrow[0], arrow[1]);
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    alert('error');
+                }
+            })
+        }, 2000);
     });
 </script>
 </body>

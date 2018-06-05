@@ -5,7 +5,7 @@ from datetime import datetime
 
 app = Flask(__name__)
 DATABASE = './database.db'
-START_PORT = 5
+START_PORT = 1
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -280,6 +280,7 @@ def reset():
     for id in ids:
         team_id, drone_id = id[0], id[1]
         c.execute('DELETE FROM team_trips WHERE team_id = ? AND drone_id = ?', (team_id, drone_id))
+        c.execute('DELETE FROM team_state WHERE team_id = ? AND drone_id = ?', (team_id, drone_id))
         c.execute('SELECT port_index, port_id FROM team_ports WHERE team_id = ? AND drone_id = ? '
                   'ORDER BY port_index ASC LIMIT 1', (team_id, drone_id))
         port_info = c.fetchone()
@@ -287,8 +288,7 @@ def reset():
         c.execute('INSERT INTO team_trips(team_id, drone_id, trip_id, from_port, to_port, state, distance) '
                   'VALUES (?, ?, ?, ?, ?, ?, ?)',
                   (team_id, drone_id, 0, START_PORT, port_id, 'created', 1))
-        c.execute('UPDATE team_state SET state = ?, port_index = ?, trip_id = ?, curr_port = ?, next_port = ? '
-                  'WHERE team_id = ? AND drone_id = ?',
+        c.execute('INSERT INTO team_state (state, port_index, trip_id, curr_port, next_port, team_id, drone_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
                   ('land', port_index, 0, START_PORT, port_id, team_id, drone_id))
         db.commit()
 
