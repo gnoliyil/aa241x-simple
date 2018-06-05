@@ -5,6 +5,13 @@
     max-width: 1024px;
 }
 
+.main-container-wide {
+    margin-top: 50px;
+    margin-bottom: 50px;
+
+    max-width: 1152px;
+}
+
 .row {
     margin-top: 20px;
 }

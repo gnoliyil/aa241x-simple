@@ -11,7 +11,7 @@
 </head>
 
 <body>
-<div class="container main-container">
+<div class="container main-container-wide">
     <div class="row">
         <h1>
             AA241x Admin Page
@@ -19,14 +19,36 @@
     </div>
 
     <div class="row">
-        <div class="col-sm-12 col-md-6">
+        <div class="col-sm-3">
+            <div class="card"><div class="card-body">
+                Team 1: $<span id="earnings-1"></span>
+            </div></div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card"><div class="card-body">
+                Team 2: $<span id="earnings-2"></span>
+            </div></div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card"><div class="card-body">
+                Team 3: $<span id="earnings-3"></span>
+            </div></div>
+        </div>
+        <div class="col-sm-3">
+            <div class="card"><div class="card-body">
+                Team 4: $<span id="earnings-4"></span>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-12 col-md-7">
             <div class="container">
-                <div class="row">
-                    <table id="table_id" class="display compact" style="width:500px">
+                    <table id="table_id" class="display compact" style="width:100%">
                         <thead>
                         <tr>
-                            <th>Team ID</th>
-                            <th>Drone ID</th>
+                            <th>Team</th>
+                            <th>Drone</th>
                             <th>Current Port</th>
                             <th>Next Port</th>
                             <th>Status</th>
@@ -36,16 +58,17 @@
                         <tbody>
                         </tbody>
                     </table>
-                </div>
-                <div class="row">
-                    <table id="table_trip" class="display compact">
+                    <p></p>
+                    <table id="table_trip" class="display compact" style="width: 100%;">
                         <thead>
                         <tr>
-                            <th>Trip ID</th>
+                            <th>Team</th>
+                            <th>Drone</th>
+                            <th>Trip</th>
                             <th>From</th>
                             <th>To</th>
-                            <th>Start time</th>
-                            <th>End time</th>
+                            <th>Start at</th>
+                            <th>End at</th>
                             <th>Status</th>
                             <th>Distance</th>
                             <th>Price</th>
@@ -54,6 +77,8 @@
                         <tbody>
                         <tr>
                             <td>Team ID</td>
+                            <td>Trip ID</td>
+                            <td>Drone ID</td>
                             <td>Current Port</td>
                             <td>Next Port</td>
                             <td>Current Port</td>
@@ -64,13 +89,17 @@
                         </tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
+        </div>
         </div>
 
-        <div class="col-sm-12 col-md-6">
-            <canvas id="c" width="500" height="500">
+        <div class="col-sm-12 col-md-5">
+            <p>
+                <canvas id="c" width="500" height="570">
             </canvas>
+            </p>
+            <p>
+                <img src="{{ url_for('static', filename = "legend.png") }}" />
+            </p>
         </div>
     </div>
 
@@ -87,7 +116,7 @@
 <script>
 
     function _createArrowHead(points, color) {
-        var headLength = 15,
+        var headLength = 25,
 
             x1 = points[0],
             y1 = points[1],
@@ -120,7 +149,7 @@
 
     function createLineArrow(points, color) {
         var line = new fabric.Line(points, {
-            strokeWidth: 5,
+            strokeWidth: 10,
             stroke: color,
             originX: 'center',
             originY: 'center',
@@ -136,56 +165,98 @@
 
 
     $(document).ready(function() {
+        let points = {
+            1: {x: 257, y: 69}, // lagunita
+            2: {x: 71, y: 60}, // elliott
+            3: {x: 44, y: 240}, // golf
+            4: {x: 69, y: 427}, // serra
+            5: {x: 233, y: 512} // trail
+        };
+
+        let colors = {
+            1: 'red',
+            2: 'orange',
+            3: 'blue',
+            4: 'violet'
+        };
+
+        let portName = {
+            1: 'Lagunita',
+            2: 'Elliott',
+            3: 'Golf',
+            4: 'Serra',
+            5: 'Trail'
+        };
+
         let table = $("#table_id").DataTable({
             paging: false,
             searching: false,
             info: false,
             ajax: 'teams',
-            columns: [ { "data": "team_id"}, { "data": "drone_id"}, { "data": "curr_port"},
-                { "data": "next_port"}, { "data": "state"}, { "data": "profit"}]
+            columns: [ { "data": "team_id"}, { "data": "drone_id"},
+                { "data": "curr_port",
+                  "render": function (data, type, row) {
+                    return data + ' ' + portName[data];
+                  }},
+                { "data": "next_port",
+                  "render": function (data, type, row) {
+                    return data + ' ' + portName[data];
+                  }},
+                { "data": "state"}, { "data": "profit", className: "dt-right",
+                    "render": function ( data, type, row ) {
+                        return "$" + Number(data).toFixed(2);
+                    }}]
         });
 
-        $("#table_trip").DataTable({
-            paging: false,
+        let queryInterval;
+
+        let table_trip = $("#table_trip").DataTable({
+            paging: true,
             searching: false,
             scrollX: true,
-            scrollY: "500px",
+            // scrollY: "350px",
             info: false,
+            autoWidth: true,
             ajax: {
                 url: 'trips',
                 data: {
-                    team_id: 1, drone_id: 0
+                    // team_id: 1, drone_id: 0
                 }
             },
-            columns: [ { "data": "trip_id"}, { "data": "from_port"},
-                { "data": "to_port"}, {"data": "from_time" }, 
-                { "data": "to_time"}, { "data": "state"}, { "data": "distance"}, { "data": "price"}, ]
+            columns: [
+                { data: "team_id"},
+                { data: "drone_id"},
+                { data: "trip_id"},
+                { "data": "from_port", "width": '250px',
+                  "render": function (data, type, row) {
+                    return portName[data];
+                  }},
+                { "data": "to_port",
+                  "render": function (data, type, row) {
+                    return portName[data];
+                  }},
+                { data: "from_time" },
+                { data: "to_time"},
+                { data: "state"},
+                { data: "distance", className: "dt-right",},
+                { data: "price",
+                    className: "dt-right",
+                    render: function ( data, type, row ) {
+                        return "$" + Number(data).toFixed(2);
+                    }},
+            ]
         });
 
         setInterval( function () {
-            table.ajax.reload();
-        }, 2000 );
+            table.ajax.reload(null, false);
+            table_trip.ajax.reload(null,false);
+        }, 3000 );
 
         let canvas = new fabric.StaticCanvas('c', {
             backgroundColor : "#fff",
         });
-        canvas.setBackgroundImage("{{ url_for('static', filename='lakelag.jpg')}}", canvas.renderAll.bind(canvas));
+        canvas.setBackgroundImage("{{ url_for('static', filename='lakelag.png')}}", canvas.renderAll.bind(canvas));
 
-        let points = {
-            1: {x: 50, y: 40}, // elliott
-            2: {x: 205, y: 50}, // lagunita
-            3: {x: 25, y: 190}, // golf
-            4: {x: 50, y: 340}, // serra
-            5: {x: 185, y: 415} // trail
-        };
-
-        let colors = {
-            1: 'pink',
-            2: 'white',
-            3: 'blue',
-            4: 'violet',
-            5: 'orange'
-        };
 
         let shapes = [];
 
@@ -206,11 +277,11 @@
                         if (arr[i].state === 'land') {
                             let curr_port = points[arr[i].curr_port];
                             let trig = new fabric.Triangle({
-                                top: curr_port.y,
-                                left: curr_port.x,
+                                top: curr_port.y - 14,
+                                left: curr_port.x - 12,
                                 fill: colors[arr[i].team_id],
-                                height: 15,
-                                width: 15
+                                height: 25,
+                                width: 25
                             });
                             shapes.push(trig);
                             canvas.add(trig);
@@ -229,7 +300,23 @@
                 error: function(xhr) {
                     alert('error');
                 }
-            })
+            });
+
+            $.ajax({
+                type: 'GET',
+                cache: false,
+                url: 'earning',
+                dataType: 'json',
+                success: function (json) {
+                    $('#earnings-1').html(Number(json[1]).toFixed(2));
+                    $('#earnings-2').html(Number(json[2]).toFixed(2));
+                    $('#earnings-3').html(Number(json[3]).toFixed(2));
+                    $('#earnings-4').html(Number(json[4]).toFixed(2));
+                },
+                error: function(xhr) {
+                    alert('error');
+                }
+            });
         }, 2000);
     });
 </script>
