@@ -22,7 +22,7 @@
         <div class="col-sm-12 col-md-6">
             <div class="container">
                 <div class="row">
-                    <table id="table_id" class="display compact">
+                    <table id="table_id" class="display compact" style="width:500px">
                         <thead>
                         <tr>
                             <th>Team ID</th>
@@ -41,8 +41,10 @@
                         <thead>
                         <tr>
                             <th>Trip ID</th>
-                            <th>Current Port</th>
-                            <th>Next Port</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Start time</th>
+                            <th>End time</th>
                             <th>Status</th>
                             <th>Distance</th>
                             <th>Price</th>
@@ -51,6 +53,8 @@
                         <tbody>
                         <tr>
                             <td>Team ID</td>
+                            <td>Current Port</td>
+                            <td>Next Port</td>
                             <td>Current Port</td>
                             <td>Next Port</td>
                             <td>Status</td>
@@ -143,6 +147,8 @@
         $("#table_trip").DataTable({
             paging: false,
             searching: false,
+            scrollX: true,
+            scrollY: "500px",
             info: false,
             ajax: {
                 url: 'trips',
@@ -151,7 +157,8 @@
                 }
             },
             columns: [ { "data": "trip_id"}, { "data": "from_port"},
-                { "data": "to_port"}, { "data": "state"}, { "data": "distance"}, { "data": "price"}, ]
+                { "data": "to_port"}, {"data": "from_time" }, 
+                { "data": "to_time"}, { "data": "state"}, { "data": "distance"}, { "data": "price"}, ]
         });
 
         setInterval( function () {
@@ -172,8 +179,8 @@
         };
 
         let colors = {
-            1: 'red',
-            2: 'green',
+            1: 'pink',
+            2: 'white',
             3: 'blue',
             4: 'violet',
             5: 'orange'

@@ -46,8 +46,8 @@
         </div>
 
         <div class="col-sm btn-group d-flex toolbar">
-            <button type="button" class="btn btn-primary w-100" id="button-takeoff">Take off</button>
-            <button type="button" class="btn btn-primary w-100" id="button-land">Land</button>
+            <button type="button" class="btn btn-primary w-100" id="button-takeoff" disabled>Take off</button>
+            <button type="button" class="btn btn-primary w-100" id="button-land" disabled>Land</button>
             <button type="button" class="btn btn-outline-secondary w-100" id="button-failure">Failure</button>
         </div>
     </div>
@@ -130,9 +130,15 @@
                     }
                 });
             }, 1000);
+            $('#button-takeoff').prop("disabled", false);
+            $('#button-land').prop("disabled", false);
+            $('#button-start').text("Stop");
         } else {
             window.clearInterval(intervalId);
             intervalId = null;
+            $('#button-takeoff').prop("disabled", true);
+            $('#button-land').prop("disabled", true);
+            $('#button-start').text("Start");
         }
     });
 
