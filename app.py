@@ -2,6 +2,7 @@ from flask import Flask, request, session, url_for, escape, redirect, jsonify, r
 import sqlite3
 from flask import g
 from datetime import datetime
+from dateutil import parser
 
 app = Flask(__name__)
 DATABASE = './database.db'
@@ -82,11 +83,21 @@ def trips_info():
     d = []
 
     for id in ids:
+        if id['to_time']:
+            to_time = parser.parse(id['to_time']).strftime("%H:%M:%S")
+        else:
+            to_time = ''
+        if id['from_time']:
+            from_time = parser.parse(id['from_time']).strftime("%H:%M:%S")
+        else:
+            from_time = ''
         d.append({
             'trip_id': id['trip_id'],
             'drone_id': id['drone_id'],
             'from_port': id['from_port'],
             'to_port': id['to_port'],
+            'from_time': from_time, 
+            'to_time': to_time,  
             'state': id['state'],
             'distance': id['distance'],
             'altitude': id['altitude'],
@@ -309,4 +320,4 @@ def reset():
     })
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')
