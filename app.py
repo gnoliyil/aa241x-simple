@@ -8,7 +8,7 @@ import io, csv
 
 app = Flask(__name__)
 DATABASE = './database.db'
-START_PORT = 1
+START_PORT = 1 # deprecated
 ALTITUDE = [10, 20, 30, 40]
 
 def dist_ports(a, b): # in meters
@@ -349,12 +349,18 @@ def reset():
                   'ORDER BY port_index ASC LIMIT 1', (team_id, drone_id))
         port_info = c.fetchone()
         port_index, port_id = port_info['port_index'], port_info['port_id']
+
+        c.execute('SELECT port_index, port_id FROM team_ports WHERE team_id = ? AND drone_id = ? AND port_index > ?'
+                  'ORDER BY port_index ASC LIMIT 1', (team_id, drone_id, port_index))
+        port_info = c.fetchone()
+        port_index_next, port_id_next = port_info['port_index'], port_info['port_id']
+
         altitude = random.choice(ALTITUDE)
         c.execute('INSERT INTO team_trips(team_id, drone_id, trip_id, from_port, to_port, state, distance, altitude) '
                   'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                  (team_id, drone_id, 0, START_PORT, port_id, 'created', dist_ports(START_PORT, port_id), altitude))
+                  (team_id, drone_id, 0, port_id, port_id_next, 'created', dist_ports(port_id, port_id_next), altitude))
         c.execute('INSERT INTO team_state (state, port_index, trip_id, curr_port, next_port, team_id, drone_id, altitude, profit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                  ('land', port_index, 0, START_PORT, port_id, team_id, drone_id, altitude, 0))
+                  ('land', port_index, 0, port_id, port_id_next, team_id, drone_id, altitude, 0))
         db.commit()
 
     return jsonify({
