@@ -30,8 +30,10 @@
                     Featured
                 </div -->
                 <div class="card-body">
-                    <h4 class="card-title">Next port</h4>
-                    <p class="card-text text-center"><span style="font-size: 8em">&nbsp;</span><span style="font-size: 8em" id="span-next">N/A</span></p>
+                    <h4 class="card-title">Origin: </h4>
+                    <p class="card-text text-center"><span style="font-size: 4em">&nbsp;</span><span style="font-size: 4em" id="span-prev">N/A</span></p>
+                    <h4 class="card-text">Destination: </h4>
+                    <p class="card-text text-center"><span style="font-size: 6em">&nbsp;</span><span style="font-size: 6em" id="span-next">N/A</span></p>
                     <p class="card-text text-center">Altitude: <span id="span-altitude">N/A</span> m</p>
                     <!-- a href="#" class="btn btn-primary">Go somewhere</a -->
                 </div>
@@ -154,7 +156,9 @@
                             let span_next = $('#span-next');
                             let previous = span_next.html();
                             let next_text = json.next + " " + portName[json.next];
+                            let prev_text = json.prev + " " + portName[json.prev];
                             span_next.html(next_text);
+                            $('#span-prev').html(prev_text);
                             $('#span-altitude').html(json.altitude);
                             if (previous != next_text) {
                                 // add some animation effects
@@ -163,6 +167,7 @@
                             }
                         }
                         else {
+                            $('#span-prev').html("N/A");
                             $('#span-next').html("N/A");
                             $('#span-altitude').html("N/A");
                         }
@@ -218,6 +223,8 @@
                     $("#modal-body").html('After the drone lands at destination port, please click on "Confirm Landing" button on the screen, to get ' +
                         'new destination port information. If your drone fails, please click on "Failure" button to reset the state.');
                     $("#myModal").modal();
+                    $("#button-takeoff").prop("disabled", true);
+                    $("#button-land").prop("disabled", false);
                 }
                 else {
                     $("#modal-title").html('Takeoff confirmation error');
@@ -251,6 +258,8 @@
                         '<p> Then command the drone to take off using your mobile app. </p>' +
                         '<p> When the drone has taken off, click "Confirm takeoff" on this page to confirm that the flight has begun. </p>');
                     $("#myModal").modal();
+                    $("#button-land").prop("disabled", true);
+                    $("#button-takeoff").prop("disabled", false);
                 }
                 else {
                     $("#modal-title").html('Landing confirmation error');
@@ -282,6 +291,8 @@
                     $("#modal-body").html('Please move your drone to the source port, and restart your previous trip. After the drone has taken off,' +
                         'please click on "Confirm takeoff" again. ');
                     $("#myModal").modal();
+                    $("#button-takeoff").prop("disabled", false);
+                    $("#button-land").prop("disabled", false);
                 }
                 else {
                     $("#modal-title").html('Status reset error');

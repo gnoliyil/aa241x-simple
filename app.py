@@ -9,16 +9,16 @@ import io, csv
 app = Flask(__name__)
 DATABASE = './database.db'
 START_PORT = 1 # deprecated
-ALTITUDE = [10, 20, 30, 40]
+ALTITUDE = [10, 15, 20, 25]
 
 def dist_ports(a, b): # in meters
     dist = [
         [0, 0, 0, 0, 0, 0],
-        [0, 0,     156,   225.9,  333.2,  368.3],
-        [0, 156,   0,     147.2,  301.6,  397.1],
-        [0, 225.9, 147.2, 0,      157.8,  276.4],
-        [0, 333.2, 301.6, 157.8,  0,      150.7],
-        [0, 368.3, 397.1, 276.4,  150.7,  0],
+        [0, 0,     156.8,   216.1,  316.8,  0],
+        [0, 156.8,   0,     138.3,  293.7,  0],
+        [0, 216.1, 138.3, 0,      159.8,  0],
+        [0, 316.8, 293.7, 159.8,  0,      0],
+        [0, 0, 0, 0, 0, 0],
     ]
     return dist[a][b]
 
@@ -30,7 +30,10 @@ def cal_price(port_a, port_b, time_a, time_b):
 
     secs = (time_b - time_a).total_seconds()
     dist = dist_ports(port_a, port_b)
-    return float(dist) / secs
+    speed = dist / secs
+
+    f = 26 + 0.087 * dist - 0.458 * secs - 3.278 * speed
+    return f
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -167,6 +170,7 @@ def next_port():
         return jsonify({
             'status': 'ok',
             'next': team_state['next_port'],
+            'prev': team_state['curr_port'],
             'altitude': team_state['altitude'],
         })
 
@@ -360,7 +364,7 @@ def reset():
                   'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
                   (team_id, drone_id, 0, port_id, port_id_next, 'created', dist_ports(port_id, port_id_next), altitude))
         c.execute('INSERT INTO team_state (state, port_index, trip_id, curr_port, next_port, team_id, drone_id, altitude, profit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                  ('land', port_index, 0, port_id, port_id_next, team_id, drone_id, altitude, 0))
+                  ('land', port_index_next, 0, port_id, port_id_next, team_id, drone_id, altitude, 0))
         db.commit()
 
     return jsonify({
